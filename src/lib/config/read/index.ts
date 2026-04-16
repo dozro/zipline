@@ -12,6 +12,7 @@ export const rawConfig: any = {
     secret: undefined,
     databaseUrl: undefined,
     returnHttpsUrls: undefined,
+    matrixBaseUrl: undefined,
     tempDirectory: undefined,
     trustProxy: undefined,
     database: {

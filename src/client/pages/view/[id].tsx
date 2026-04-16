@@ -235,6 +235,7 @@ export default function ViewFileId() {
                       link: {
                         returned: `${host}${formatRootUrl(filesRoute ?? '/u', file.name!)}`,
                         raw: `${host}/raw/${file.name}`,
+                        // mxc: `mxc://${host.replace(/(http)|(https)/, '')}/${toMatrixID(file.name!)}`,
                       },
                       user: user as User,
                       ...metrics,

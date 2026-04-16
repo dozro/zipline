@@ -33,6 +33,7 @@ import { showNotification } from '@mantine/notifications';
 import {
   Icon,
   IconBombFilled,
+  IconBrandMatrix,
   IconChevronLeft,
   IconChevronRight,
   IconClipboardTypography,
@@ -450,6 +451,11 @@ export default function FileModal({
                   Icon={IconClipboardTypography}
                   onClick={() => copyFile(file, clipboard, true)}
                   tooltip='Copy raw file link'
+                />
+                <ActionButton
+                  Icon={IconBrandMatrix}
+                  onClick={() => copyFile(file, clipboard, false, true)}
+                  tooltip='Copy mxc file link'
                 />
                 <ActionButton
                   Icon={IconCopy}

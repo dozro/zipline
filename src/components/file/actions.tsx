@@ -20,6 +20,7 @@ import {
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { mutate } from 'swr';
+import { toMatrixID } from '@/lib/matrix/mxcId';
 
 export function viewFile(file: File) {
   window.open(`/view/${file.name}`, '_blank');
@@ -29,12 +30,25 @@ export function downloadFile(file: File) {
   window.open(`/raw/${file.name}?download=true`, '_blank');
 }
 
-export function copyFile(file: File, clipboard: ReturnType<typeof useClipboard>, raw: boolean = false) {
-  const url = raw
-    ? getDomain(`/raw/${file.name}`)
-    : file.url
-      ? getDomain(`${file.url}`)
-      : getDomain(`/view/${file.name}`);
+export function copyFile(
+  file: File,
+  clipboard: ReturnType<typeof useClipboard>,
+  raw: boolean = false,
+  mxc: boolean = false,
+) {
+  let url: string;
+
+  if (raw && !mxc) {
+    url = getDomain(`/raw/${file.name}`);
+  } else if (mxc) {
+    url = getDomain(`/${toMatrixID(file.name)}`)
+      .replace(/^https?:/, 'mxc:')
+      .replace(/:\d+/, '');
+  } else if (file.url) {
+    url = getDomain(`${file.url}`);
+  } else {
+    url = getDomain(`/view/${file.name}`);
+  }
 
   clipboard.copy(url);
 

@@ -85,6 +85,7 @@ export const schema = z.object({
     }),
     returnHttpsUrls: z.boolean().default(false),
     defaultDomain: z.string().nullable().default(null),
+    matrixBaseUrl: z.string().nullable().default(null),
     tempDirectory: z
       .string()
       .transform((s) => resolve(s))
