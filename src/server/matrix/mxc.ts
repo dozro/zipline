@@ -1,12 +1,10 @@
 import { ApiError } from '@/lib/api/errors';
-import { parseRange } from '@/lib/api/range';
 import { config } from '@/lib/config';
 import { verifyPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { fromMatrixID } from '@/lib/matrix/mxcId';
-import { guess } from '@/lib/mimes';
 import { TimedCache } from '@/lib/timedCache';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Readable } from 'node:stream';
@@ -113,51 +111,6 @@ function decodeMatrixId(rawId: string): string | MatrixErrorResponse {
   return id;
 }
 
-async function trySendThumbnail(
-  id: string,
-  res: FastifyReply,
-): Promise<FastifyReply | MatrixErrorResponse | null> {
-  if (!id.startsWith('.thumbnail')) return null;
-
-  const thumbnail = await prisma.thumbnail.findFirst({
-    where: {
-      path: id,
-    },
-  });
-
-  if (!thumbnail) {
-    return {
-      errcode: 'M_NOT_FOUND',
-      error: `Thumbnail of media with id "${id}" not found`,
-    };
-  }
-
-  const size = await datasource.size(thumbnail.path);
-  if (!size) {
-    return {
-      errcode: 'M_NOT_FOUND',
-      error: `Thumbnail of media with id "${id}" not found`,
-    };
-  }
-
-  const buf = await datasource.get(thumbnail.path);
-  if (!buf) {
-    return {
-      errcode: 'M_NOT_FOUND',
-      error: `Thumbnail of media with id "${id}" not found`,
-    };
-  }
-
-  const thumbType = await guess(thumbnail.path.replace('.thumbnail-', '').split('.').pop() || 'jpg');
-  return res
-    .type(thumbType)
-    .headers({
-      'Content-Length': size,
-    })
-    .status(200)
-    .send(buf);
-}
-
 /**
  * resolve a file record based on the file id
  *
@@ -262,106 +215,6 @@ async function enforceMaxViews(
   return { countView };
 }
 
-async function sendMediaBytes(
-  req: RequestType,
-  res: FastifyReply,
-  id: string,
-  file: FileRecord,
-  size: number,
-  contentType: string,
-  countView: () => Promise<void>,
-): Promise<FastifyReply | MatrixErrorResponse> {
-  const contentDisposition = buildContentDisposition(file);
-
-  if (req.headers.range) {
-    const [start, end] = parseRange(req.headers.range, size);
-    if (start >= size || end >= size) {
-      const buf = await datasource.get(file.name ?? id);
-      if (!buf) {
-        return {
-          errcode: 'M_NOT_FOUND',
-          error: `Media with id "${id}" not found`,
-        };
-      }
-
-      await countView();
-
-      return res
-        .type(contentType)
-        .headers({
-          'Content-Length': size,
-          'Content-Disposition': contentDisposition,
-        })
-        .status(416)
-        .send(buf);
-    }
-
-    const buf = await datasource.range(file.name ?? id, start || 0, end);
-    if (!buf) {
-      return {
-        errcode: 'M_NOT_FOUND',
-        error: `Media with id "${id}" not found`,
-      };
-    }
-
-    await countView();
-
-    return res
-      .type(contentType)
-      .headers({
-        'Content-Range': `bytes ${start}-${end}/${size}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': end - start + 1,
-        'Content-Disposition': contentDisposition,
-      })
-      .status(206)
-      .send(buf);
-  }
-
-  const buf = await datasource.get(file.name ?? id);
-  if (!buf) {
-    return {
-      errcode: 'M_NOT_FOUND',
-      error: `Media with id "${id}" not found`,
-    };
-  }
-
-  await countView();
-
-  return res
-    .type(contentType)
-    .headers({
-      'Content-Length': size,
-      'Accept-Ranges': 'bytes',
-      'Content-Disposition': contentDisposition,
-    })
-    .status(200)
-    .send(buf);
-}
-
-const mxcSharedURLHandler = async (req: RequestType, res: FastifyReply) => {
-  const decodedId = decodeMatrixId(req.params.id);
-  if (typeof decodedId !== 'string') return decodedId;
-
-  const thumbnailResponse = await trySendThumbnail(decodedId, res);
-  if (thumbnailResponse) return thumbnailResponse;
-
-  const file = await resolveFileRecord(decodedId);
-  if ('errcode' in file) return file;
-
-  await verifyFilePassword(file, req.query.pw);
-
-  const size = file.size || (await datasource.size(file.name ?? decodedId));
-  const contentType = file.type?.startsWith('text/')
-    ? `${file.type}; charset=utf-8`
-    : (file.type ?? 'application/octet-stream');
-
-  const maxViewResult = await enforceMaxViews(req, file);
-  if ('errcode' in maxViewResult) return maxViewResult;
-
-  return sendMediaBytes(req, res, decodedId, file, size, contentType, maxViewResult.countView);
-};
-
 export const mxcServerServerURLHandler = async (req: RequestType, res: FastifyReply) => {
   const decodedId = decodeMatrixId(req.params.id);
   if (typeof decodedId !== 'string') return decodedId;
@@ -402,5 +255,3 @@ export const mxcServerServerURLHandler = async (req: RequestType, res: FastifyRe
     .status(200)
     .send(multipart.body);
 };
-
-export const mxcServerClientURLHandler = mxcSharedURLHandler;
