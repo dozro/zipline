@@ -216,23 +216,29 @@ async function enforceMaxViews(
 }
 
 export const mxcServerServerURLHandler = async (req: RequestType, res: FastifyReply) => {
+  if (!config.features.matrix.enabled) {
+    return res.status(403).send({
+      errcode: 'M_UNRECOGNIZED',
+      error: 'Matrix Endpoint was disabled on this server',
+    });
+  }
   const decodedId = decodeMatrixId(req.params.id);
-  if (typeof decodedId !== 'string') return decodedId;
+  if (typeof decodedId !== 'string') return res.status(400).send(decodedId);
 
   const file = await resolveFileRecord(decodedId);
-  if ('errcode' in file) return file;
+  if ('errcode' in file) return res.status(404).send(file);
 
   await verifyFilePassword(file, req.query.pw);
 
   const maxViewResult = await enforceMaxViews(req, file);
-  if ('errcode' in maxViewResult) return maxViewResult;
+  if ('errcode' in maxViewResult) return res.status(403).send(maxViewResult);
 
   const buf = await datasource.get(file.name ?? decodedId);
   if (!buf) {
-    return {
+    return res.status(404).send({
       errcode: 'M_NOT_FOUND',
       error: `Media with id "${decodedId}" not found`,
-    };
+    });
   }
 
   await maxViewResult.countView();

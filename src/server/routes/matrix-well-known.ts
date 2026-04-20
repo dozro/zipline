@@ -32,7 +32,7 @@ function toMatrixServerName(value: string | null | undefined): string | null {
 export default typedPlugin(
   async (server) => {
     server.get('/.well-known/matrix/server', async (req, res) => {
-      const configuredServerName = toMatrixServerName(config.core.matrixBaseUrl);
+      const configuredServerName = toMatrixServerName(config.features.matrix.baseURL);
       if (configuredServerName) {
         return res.type('application/json').send({
           'm.server': configuredServerName,

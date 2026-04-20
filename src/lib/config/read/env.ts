@@ -40,7 +40,6 @@ export const ENVS = [
   env('core.trustProxy', 'CORE_TRUST_PROXY', 'boolean', true),
   env('core.returnHttpsUrls', 'CORE_RETURN_HTTPS_URLS', 'boolean', true),
   env('core.defaultDomain', 'CORE_DEFAULT_DOMAIN', 'string', true),
-  env('core.matrixBaseUrl', 'CORE_MATRIX_BASE_URL', 'string'),
   env('core.tempDirectory', 'CORE_TEMP_DIRECTORY', 'string', true),
 
   env('chunks.max', 'CHUNKS_MAX', 'string', true),
@@ -89,6 +88,9 @@ export const ENVS = [
 
   env('features.versionChecking', 'FEATURES_VERSION_CHECKING', 'boolean', true),
   env('features.versionAPI', 'FEATURES_VERSION_API', 'string', true),
+
+  env('features.matrix.enabled', 'FEATURES_MATRIX_ENABLED', 'boolean', true),
+  env('features.matrix.baseURL', 'FEATURES_MATRIX_BASE_URL', 'string'),
 
   env('domains', 'DOMAINS', 'string[]', true),
 
