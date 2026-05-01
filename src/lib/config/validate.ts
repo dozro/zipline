@@ -214,7 +214,7 @@ export const schema = z.object({
     versionChecking: z.boolean().default(true),
     versionAPI: z.url().default('https://zipline-version.diced.sh/'),
     matrix: z.object({
-      enabled: z.boolean().default(true),
+      enabled: z.boolean().default(false),
       baseURL: z.string().nullable().default(null),
     }),
   }),

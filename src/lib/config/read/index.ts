@@ -76,6 +76,10 @@ export const rawConfig: any = {
       adminOnly: undefined,
       showUserSpecific: undefined,
     },
+    matrix: {
+      enabled: undefined,
+      baseURL: undefined,
+    },
   },
   invites: {
     enabled: undefined,

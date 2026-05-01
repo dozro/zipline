@@ -35,15 +35,19 @@ export function copyFile(
   clipboard: ReturnType<typeof useClipboard>,
   raw: boolean = false,
   mxc: boolean = false,
+  matrixBaseURL: string | undefined | null = '',
 ) {
   let url: string;
 
   if (raw && !mxc) {
     url = getDomain(`/raw/${file.name}`);
   } else if (mxc) {
-    url = getDomain(`/${toMatrixID(file.name)}`)
-      .replace(/^https?:/, 'mxc:')
-      .replace(/:\d+/, '');
+    if (matrixBaseURL)
+      url = `${matrixBaseURL}/${toMatrixID(file.name)}`.replace(/^https?:/, 'mxc:').replace(/:\d+/, '');
+    else
+      url = getDomain(`/${toMatrixID(file.name)}`)
+        .replace(/^https?:/, 'mxc:')
+        .replace(/:\d+/, '');
   } else if (file.url) {
     url = getDomain(`${file.url}`);
   } else {

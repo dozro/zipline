@@ -89,8 +89,9 @@ export const ENVS = [
   env('features.versionChecking', 'FEATURES_VERSION_CHECKING', 'boolean', true),
   env('features.versionAPI', 'FEATURES_VERSION_API', 'string', true),
 
-  env('features.matrix.enabled', 'FEATURES_MATRIX_ENABLED', 'boolean', true),
-  env('features.matrix.baseURL', 'FEATURES_MATRIX_BASE_URL', 'string'),
+  // matrix media repo
+  env('features.matrix.enabled', 'FEATURES_MATRIX_ENABLED', 'boolean', false),
+  env('features.matrix.baseURL', 'FEATURES_MATRIX_BASE_URL', 'string', false),
 
   env('domains', 'DOMAINS', 'string[]', true),
 

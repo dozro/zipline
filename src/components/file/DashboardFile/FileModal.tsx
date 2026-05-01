@@ -73,6 +73,7 @@ import {
 } from '../actions';
 import EditFileDetailsModal from './EditFileDetailsModal';
 import FileStat from './FileStat';
+import { useConfig } from '@/components/ConfigProvider';
 
 function ActionButton({
   Icon,
@@ -111,6 +112,7 @@ export default function FileModal({
   sequenced?: boolean;
 }) {
   const clipboard = useClipboard();
+  const config = useConfig();
   const warnDeletion = useSettingsStore((state) => state.settings.warnDeletion);
   const fileNavButtons = useSettingsStore((state) => state.settings.fileNavButtons);
 
@@ -452,11 +454,13 @@ export default function FileModal({
                   onClick={() => copyFile(file, clipboard, true)}
                   tooltip='Copy raw file link'
                 />
-                <ActionButton
-                  Icon={IconBrandMatrix}
-                  onClick={() => copyFile(file, clipboard, false, true)}
-                  tooltip='Copy mxc file link'
-                />
+                {config.features.matrix.enabled && (
+                  <ActionButton
+                    Icon={IconBrandMatrix}
+                    onClick={() => copyFile(file, clipboard, false, true, config.features.matrix.baseURL)}
+                    tooltip='Copy matrix media (mxc) file link'
+                  />
+                )}
                 <ActionButton
                   Icon={IconCopy}
                   onClick={() => copyFile(file, clipboard)}
